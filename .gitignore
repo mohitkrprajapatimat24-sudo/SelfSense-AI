@@ -1,0 +1,36 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Models and weights (recreated by scripts/bootstrap.py)
+models/
+*.pt
+*.pth
+*.onnx
+*.gguf
+*.index
+
+# Downloaded binaries (llama.cpp)
+tools/
+
+# Generated data and outputs
+data/synthetic/
+data/raw/
+runs/
+outputs/
+reports/
+*.db
+*.sqlite
+
+# Secrets and local config
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+Thumbs.db

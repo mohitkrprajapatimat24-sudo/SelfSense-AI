@@ -1,0 +1,36 @@
+# torch / torchvision are installed by scripts/bootstrap.py first
+# (CUDA build when an NVIDIA GPU is present, CPU build otherwise).
+
+# Core
+numpy==2.4.6
+opencv-python==5.0.0.93
+pillow==12.3.0
+pandas==3.0.6
+pydantic==2.14.1
+
+# Vision
+ultralytics==8.4.182
+onnx==1.23.2
+onnxruntime==1.31.0
+faiss-cpu==1.15.1
+transformers==5.20.1
+huggingface_hub==2.2.0
+
+# OCR (PaddleOCR models running on ONNX Runtime)
+rapidocr==3.10.0
+
+# Synthetic data
+rembg==2.0.85
+
+# Backend / frontend
+fastapi==0.146.0
+uvicorn[standard]==0.54.0
+python-multipart==0.0.32
+streamlit==1.66.0
+reportlab==5.0.1
+
+# Language model client (talks to the local llama.cpp server)
+requests==2.34.2
+
+# Dev
+pytest==9.1.1

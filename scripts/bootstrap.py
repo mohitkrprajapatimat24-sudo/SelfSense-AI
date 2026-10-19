@@ -87,6 +87,12 @@ def download_models():
     # RapidOCR fetches its ONNX weights on first construction into its package folder.
     run([py, "-c", "from rapidocr import RapidOCR; RapidOCR()"])
 
+    # rembg background-removal model, used to cut out product photos
+    rembg_home = MODELS / "rembg"
+    if not (rembg_home / "u2net.onnx").exists():
+        run([py, "-c", "from rembg import new_session; new_session('u2net')"],
+            env={**os.environ, "U2NET_HOME": str(rembg_home)})
+
 
 def llama_cpp_asset() -> str:
     system, machine = platform.system(), platform.machine().lower()

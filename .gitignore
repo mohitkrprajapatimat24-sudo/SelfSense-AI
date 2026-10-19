@@ -21,6 +21,7 @@ tools/
 # Generated data and outputs
 data/synthetic/
 data/raw/
+data/products/
 runs/
 outputs/
 reports/

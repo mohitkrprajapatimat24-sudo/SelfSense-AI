@@ -1,0 +1,29 @@
+{
+  "planogram_id": "P03",
+  "bay_id": "Aisle 1, Bay 4",
+  "description": "Mixed snacks endcap",
+  "shelf_width_mm": 1200,
+  "rows": [
+    {"row": 1, "slots": [
+      {"sku": "CHP-LAYSCL-52", "facings": 2},
+      {"sku": "CHP-KURKURE-75", "facings": 2},
+      {"sku": "CHP-BINGO-66", "facings": 2}
+    ]},
+    {"row": 2, "slots": [
+      {"sku": "NDL-MAGGI-70", "facings": 3},
+      {"sku": "NDL-KNORR-70", "facings": 3},
+      {"sku": "NDL-YIPPEE-70", "facings": 2}
+    ]},
+    {"row": 3, "slots": [
+      {"sku": "BIS-PARLEG-250", "facings": 4},
+      {"sku": "BIS-OREO-120", "facings": 3},
+      {"sku": "BIS-GOODDAY-100", "facings": 3},
+      {"sku": "BIS-HIDESEEK-100", "facings": 3}
+    ]},
+    {"row": 4, "slots": [
+      {"sku": "CHP-UNCLE-50", "facings": 2},
+      {"sku": "CHP-LAYSMM-52", "facings": 3},
+      {"sku": "CHP-BINGO-66", "facings": 2}
+    ]}
+  ]
+}

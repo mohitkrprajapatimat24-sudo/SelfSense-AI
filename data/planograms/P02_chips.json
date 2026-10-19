@@ -1,0 +1,21 @@
+{
+  "planogram_id": "P02",
+  "bay_id": "Aisle 5, Bay 1",
+  "description": "Chips and namkeen",
+  "shelf_width_mm": 1200,
+  "rows": [
+    {"row": 1, "slots": [
+      {"sku": "CHP-LAYSCL-52", "facings": 3},
+      {"sku": "CHP-LAYSMM-52", "facings": 4}
+    ]},
+    {"row": 2, "slots": [
+      {"sku": "CHP-KURKURE-75", "facings": 3},
+      {"sku": "CHP-BINGO-66", "facings": 3}
+    ]},
+    {"row": 3, "slots": [
+      {"sku": "CHP-UNCLE-50", "facings": 3},
+      {"sku": "CHP-LAYSMM-52", "facings": 2},
+      {"sku": "CHP-KURKURE-75", "facings": 2}
+    ]}
+  ]
+}

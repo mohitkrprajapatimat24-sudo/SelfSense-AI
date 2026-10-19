@@ -1,0 +1,21 @@
+{
+  "planogram_id": "P04",
+  "bay_id": "Aisle 3, Bay 3",
+  "description": "Biscuits, narrow bay",
+  "shelf_width_mm": 900,
+  "rows": [
+    {"row": 1, "slots": [
+      {"sku": "BIS-PARLEG-250", "facings": 6},
+      {"sku": "BIS-GOODDAY-100", "facings": 4}
+    ]},
+    {"row": 2, "slots": [
+      {"sku": "BIS-OREO-120", "facings": 5},
+      {"sku": "BIS-HIDESEEK-100", "facings": 5}
+    ]},
+    {"row": 3, "slots": [
+      {"sku": "BIS-PARLEG-250", "facings": 4},
+      {"sku": "BIS-OREO-120", "facings": 3},
+      {"sku": "BIS-HIDESEEK-100", "facings": 3}
+    ]}
+  ]
+}

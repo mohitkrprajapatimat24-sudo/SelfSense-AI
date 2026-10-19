@@ -1,0 +1,13 @@
+sku,name,brand,category,price,width_mm,height_mm,velocity_per_day,color,accent
+NDL-MAGGI-70,Maggi Masala Noodles 70g,Maggi,noodles,15,125,95,40,#FFD200,#D71920
+NDL-YIPPEE-70,Yippee Magic Masala Noodles 70g,Yippee,noodles,15,125,95,25,#F58220,#5B2C83
+NDL-KNORR-70,Knorr Soupy Noodles Masala 70g,Knorr,noodles,20,120,95,12,#00843D,#FFD100
+BIS-PARLEG-250,Parle-G Glucose Biscuits 250g,Parle-G,biscuits,25,75,180,35,#FFE600,#E30613
+BIS-GOODDAY-100,Good Day Cashew Cookies 100g,Good Day,biscuits,30,75,160,20,#F7A600,#7A3E1D
+BIS-OREO-120,Oreo Original Cream Biscuits 120g,Oreo,biscuits,35,70,150,18,#0057B8,#FFFFFF
+BIS-HIDESEEK-100,Hide & Seek Choco Chip Cookies 100g,Hide & Seek,biscuits,30,70,150,15,#3B1F14,#E2B04A
+CHP-LAYSCL-52,Lay's Classic Salted Chips 52g,Lay's,chips,20,160,230,30,#FFD100,#E4002B
+CHP-LAYSMM-52,Lay's Magic Masala Chips 52g,Lay's,chips,20,160,230,35,#1E4FA3,#FFD100
+CHP-KURKURE-75,Kurkure Masala Munch 75g,Kurkure,chips,20,160,230,30,#F47920,#00A651
+CHP-BINGO-66,Bingo Mad Angles Achaari Masti 66g,Bingo,chips,20,160,230,15,#E31E24,#FFD200
+CHP-UNCLE-50,Uncle Chipps Spicy Treat 50g,Uncle Chipps,chips,20,150,220,12,#0072BC,#F15A24

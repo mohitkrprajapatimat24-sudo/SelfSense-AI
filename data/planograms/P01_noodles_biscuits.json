@@ -1,0 +1,24 @@
+{
+  "planogram_id": "P01",
+  "bay_id": "Aisle 3, Bay 2",
+  "description": "Instant noodles and biscuits",
+  "shelf_width_mm": 1200,
+  "rows": [
+    {"row": 1, "slots": [
+      {"sku": "NDL-MAGGI-70", "facings": 3},
+      {"sku": "NDL-YIPPEE-70", "facings": 3},
+      {"sku": "NDL-KNORR-70", "facings": 2}
+    ]},
+    {"row": 2, "slots": [
+      {"sku": "BIS-PARLEG-250", "facings": 4},
+      {"sku": "BIS-GOODDAY-100", "facings": 3},
+      {"sku": "BIS-OREO-120", "facings": 3},
+      {"sku": "BIS-HIDESEEK-100", "facings": 3}
+    ]},
+    {"row": 3, "slots": [
+      {"sku": "NDL-MAGGI-70", "facings": 4},
+      {"sku": "NDL-YIPPEE-70", "facings": 2},
+      {"sku": "NDL-KNORR-70", "facings": 2}
+    ]}
+  ]
+}

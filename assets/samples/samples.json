@@ -1,0 +1,38 @@
+[
+ {
+  "file": "P01_test_00016.jpg",
+  "planogram_id": "P01",
+  "expected_score": 79.0,
+  "expected_band": "Needs attention",
+  "violations": 6
+ },
+ {
+  "file": "P02_test_00009.jpg",
+  "planogram_id": "P02",
+  "expected_score": 69.8,
+  "expected_band": "Critical",
+  "violations": 6
+ },
+ {
+  "file": "P03_test_00026.jpg",
+  "planogram_id": "P03",
+  "expected_score": 78.0,
+  "expected_band": "Needs attention",
+  "violations": 5
+ },
+ {
+  "file": "P04_test_00011.jpg",
+  "planogram_id": "P04",
+  "expected_score": 91.2,
+  "expected_band": "Good",
+  "violations": 3
+ },
+ {
+  "file": "P01_handheld.mp4",
+  "planogram_id": "P01",
+  "expected_score": 79.0,
+  "expected_band": "Needs attention",
+  "violations": 6,
+  "video": true
+ }
+]

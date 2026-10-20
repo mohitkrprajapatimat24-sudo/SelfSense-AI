@@ -188,6 +188,7 @@ class ScoreBreakdown(BaseModel):
     availability: float               # A: facings holding the planned SKU / planned facings
     score: float                      # 0-100
     band: str
+    verified: float = 1.0             # share of checks the score is based on (the rest await human review)
 
 
 class AuditResult(BaseModel):

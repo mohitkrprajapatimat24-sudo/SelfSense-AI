@@ -46,9 +46,11 @@ def audit(shelf_map: ShelfMap, planogram: Planogram, catalogue: dict[str, Catalo
             action=f"Check Row {review.row}, Pos {review.position} by hand: {review.reason}"))
 
     violations = rank(violations)
+    unsure_products = {(r.row, r.position) for r in al.reviews if r.what == "product"}
+    unsure_tags = {(r.row, r.position) for r in al.reviews if r.what == "tag"}
     return AuditResult(
         image_id=shelf_map.image_id, planogram_id=planogram.planogram_id,
-        score=compute_score(al.slots, catalogue, config.weights),
+        score=compute_score(al.slots, catalogue, config.weights, unsure_products, unsure_tags),
         violations=violations,
         revenue_at_risk=round(sum(v.revenue_at_risk for v in violations), 2),
         actions=[v.action for v in violations],

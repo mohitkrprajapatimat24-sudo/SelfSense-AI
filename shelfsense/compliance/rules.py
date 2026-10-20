@@ -112,20 +112,32 @@ def band(score: float) -> str:
 
 
 def compute_score(slots: list[SlotState], catalogue: dict[str, CatalogueItem],
-                  weights: dict[str, float] = DEFAULT_WEIGHTS) -> ScoreBreakdown:
-    """Score = 100 x (wP*P + wL*L + wA*A), as defined in the abstract."""
-    n = len(slots)
-    placement = sum(
-        1 for s in slots
-        if s.planned_sku in s.contents and all(c in (None, s.planned_sku) for c in s.contents)) / n
-    labels = sum(
-        1 for s in slots
+                  weights: dict[str, float] = DEFAULT_WEIGHTS,
+                  unsure_products: set[tuple[int, int]] = frozenset(),
+                  unsure_tags: set[tuple[int, int]] = frozenset()) -> ScoreBreakdown:
+    """Score = 100 x (wP*P + wL*L + wA*A), as defined in the abstract.
+
+    Slots whose products or tag go to human review are left out of the parts
+    they would affect, so an unreadable tag neither passes nor fails the shelf.
+    """
+    def ratio(hits, total):
+        return hits / total if total else 1.0
+
+    sure_p = [s for s in slots if (s.row, s.position) not in unsure_products]
+    sure_t = [s for s in slots if (s.row, s.position) not in unsure_tags]
+    placement = ratio(sum(
+        1 for s in sure_p
+        if s.planned_sku in s.contents and all(c in (None, s.planned_sku) for c in s.contents)), len(sure_p))
+    labels = ratio(sum(
+        1 for s in sure_t
         if s.tag_sku == s.planned_sku and s.tag_price is not None
-        and abs(s.tag_price - catalogue[s.planned_sku].price) <= PRICE_TOLERANCE) / n
-    planned_facings = sum(s.planned_facings for s in slots)
-    availability = sum(min(s.contents.count(s.planned_sku), s.planned_facings) for s in slots) / planned_facings
+        and abs(s.tag_price - catalogue[s.planned_sku].price) <= PRICE_TOLERANCE), len(sure_t))
+    availability = ratio(sum(min(s.contents.count(s.planned_sku), s.planned_facings) for s in sure_p),
+                         sum(s.planned_facings for s in sure_p))
     score = 100 * (weights["placement"] * placement + weights["labels"] * labels
                    + weights["availability"] * availability)
     score = round(score, 1)
+    verified = (len(sure_p) + len(sure_t)) / (2 * len(slots)) if slots else 1.0
     return ScoreBreakdown(placement=round(placement, 4), labels=round(labels, 4),
-                          availability=round(availability, 4), score=score, band=band(score))
+                          availability=round(availability, 4), score=score, band=band(score),
+                          verified=round(verified, 4))

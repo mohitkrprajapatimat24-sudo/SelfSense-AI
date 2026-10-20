@@ -21,7 +21,8 @@ NO_CURRENCY_PENALTY = 0.5  # applied when a bare number looks like ₹ misread a
 BARE_NUMBER_RE = re.compile(r"^\s*(\d{1,5}(?:[.,]\d{1,2})?)\s*$")
 SKU_RE = re.compile(r"[A-Z]{3}-[A-Z0-9&]+-\d+")
 UPSCALE = 2
-NAME_MATCH_MIN = 0.6
+NAME_MATCH_MIN = 0.45
+NAME_MATCH_MARGIN = 0.08
 
 
 @dataclass
@@ -86,14 +87,20 @@ class TagReader:
         return TagRead(sku=sku, price=price, text=text, conf=round(conf, 3))
 
     def _match_name(self, texts: list[str]) -> tuple[str | None, float]:
-        best, best_ratio = None, 0.0
+        """Closest catalogue name to a (possibly garbled) OCR line; must clearly beat the runner-up."""
+        scores: dict[str, float] = {}
         for t in texts:
             t = t.lower()
-            if len(t) < 5 or PRICE_RE.search(t):
+            if len(t) < 5 or PRICE_RE.search(t) or t[:2].strip().isdigit():
                 continue
             for sku, item in self.catalogue.items():
-                # tags often cut the name short, so compare with the same-length prefix
-                ratio = difflib.SequenceMatcher(None, t, item.name.lower()[:len(t)]).ratio()
-                if ratio > best_ratio:
-                    best, best_ratio = sku, ratio
-        return (best, best_ratio) if best_ratio >= NAME_MATCH_MIN else (None, 0.0)
+                # tags cut the name short and OCR drops or adds letters: try prefixes of nearby lengths
+                name = item.name.lower()
+                ratio = max(difflib.SequenceMatcher(None, t, name[:n]).ratio()
+                            for n in range(max(4, len(t) - 3), len(t) + 4))
+                scores[sku] = max(scores.get(sku, 0.0), ratio)
+        if not scores:
+            return None, 0.0
+        ranked = sorted(scores.items(), key=lambda kv: -kv[1])
+        (best, r1), r2 = ranked[0], (ranked[1][1] if len(ranked) > 1 else 0.0)
+        return (best, r1) if r1 >= NAME_MATCH_MIN and r1 - r2 >= NAME_MATCH_MARGIN else (None, 0.0)

@@ -29,7 +29,14 @@ shelfsense/
   compliance/       alignment, rules, score, ranked audit
   generator/        synthetic shelf generator
   eval/             accuracy against the answer keys
-  viz.py            draw boxes over a shelf image
+  service.py        one audit end to end + history
+  report.py         PDF report
+  api/              FastAPI app
+  dashboard/        Streamlit store dashboard
+  viz.py            draw boxes and audits over a shelf image
+assets/
+  fonts/            Noto Sans (with ₹), Noto Sans Symbols 2
+  samples/          demo shelves and a hand-held video
 data/
   catalogue/catalogue.csv   SKU, name, price, size, sales velocity
   planograms/*.json         bay -> rows -> [SKU, facings]
@@ -152,6 +159,45 @@ packs, which are easier than real packaging. Add real product photos
 retrain and rebuild the gallery to get representative numbers, and check on
 real phone photos. The abstract's SKU-110K subset is not used yet (a ~13 GB
 download); it would mainly help the product detector on real shelves.
+
+## Dashboard, API and reports (stage 4)
+
+```
+streamlit run shelfsense/dashboard/app.py          # store dashboard
+uvicorn shelfsense.api.app:app --port 8000         # REST API, docs at /docs
+```
+
+**Dashboard.** Pick a sample shelf (`assets/samples/`, including a hand-held
+video) or upload a photo or short video of one bay, then *Run audit*. It shows
+the annotated shelf (green / amber / red / purple per slot), the compliance
+score with its band, issue counts, revenue at risk, and the ranked actions.
+Tabs list every violation and every slot, the bay's score history, and how
+the photo was read (timings, sharpest video frame, notes). *Download PDF
+report* gives a one-page summary for staff.
+
+**API.**
+
+| Method | Path | |
+|---|---|---|
+| GET | `/health` | models loaded, planograms, SKUs |
+| GET | `/planograms` | bays that can be audited |
+| POST | `/audit` | multipart `file` (photo or video), `planogram_id`, optional `store_id` |
+| GET | `/audits?bay_id=&store_id=` | audit history |
+| GET | `/audits/{id}` | full record |
+| GET | `/audits/{id}/annotated.jpg` | annotated shelf |
+| GET | `/audits/{id}/report.pdf` | PDF report |
+
+```
+curl -F file=@assets/samples/P02_test_00009.jpg -F planogram_id=P02 http://localhost:8000/audit
+```
+
+Audits are kept in `outputs/` (SQLite index + one folder per audit); set
+`SHELFSENSE_OUTPUTS` to store them elsewhere and `SHELFSENSE_THREADS` to
+limit CPU threads.
+
+Items sent to human review are left out of the score rather than counted as
+failures; the score then says how much of the shelf it covers ("based on 93%
+of checks").
 
 ## Compliance rules
 

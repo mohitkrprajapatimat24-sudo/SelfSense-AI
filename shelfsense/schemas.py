@@ -194,6 +194,9 @@ class AuditResult(BaseModel):
     image_id: str
     planogram_id: str
     score: ScoreBreakdown
-    violations: list[Violation]
+    violations: list[Violation]       # ranked, most urgent first
     revenue_at_risk: float
-    actions: list[str] = []
+    actions: list[str] = []           # one line per violation, same order
+    slots: list[SlotState] = []       # what was found in every planned slot
+    slot_boxes: dict[str, BBox] = {}  # "row-pos" -> where that slot is in the image
+    notes: list[str] = []             # anything the engine could not resolve

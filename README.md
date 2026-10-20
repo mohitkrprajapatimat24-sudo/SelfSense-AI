@@ -25,8 +25,10 @@ llama.cpp CPU runtime into `tools/`.
 shelfsense/
   schemas.py        data contracts shared by every stage
   data.py           catalogue and planogram loading + validation
-  compliance/       rules engine and compliance score
+  perception/       detections -> shelf rows (models arrive in stage 3)
+  compliance/       alignment, rules, score, ranked audit
   generator/        synthetic shelf generator
+  eval/             accuracy against the answer keys
   viz.py            draw boxes over a shelf image
 data/
   catalogue/catalogue.csv   SKU, name, price, size, sales velocity
@@ -68,6 +70,41 @@ colours. To use real packaging:
    (folder names must match the `sku` column in `catalogue.csv`).
 2. `python -m shelfsense.generator.prepare_products` removes the backgrounds.
 3. Regenerate the datasets; the generator picks up the cutouts automatically.
+
+## Compliance engine (stage 2)
+
+`shelfsense.compliance.engine.audit(shelf_map, planogram, catalogue)` turns
+detected boxes into a scored, ranked audit:
+
+1. **Rows**: `perception/shelf_map.py` clusters product bottoms into shelf
+   rows; each price tag joins the row just above it.
+2. **Alignment**: `compliance/align.py` matches detected rows to planned
+   rows, then aligns each row's left-to-right products and empty spaces to the
+   planned facings (edit distance plus position). Candidate row placements are
+   voted by matching SKUs and the cheapest is kept, so a neighbour's product on
+   a slot edge reads as "misplaced", not "everything shifted". Scale comes from
+   product spacing, which tilt does not inflate.
+3. **Tags**: each slot takes the tag under its left edge.
+4. **Rules, ranking, score**: stock-outs first (by revenue at risk), then
+   misplacements and wrong prices, then low stock and labels. Low-confidence
+   product matches or tag reads become NEEDS_REVIEW instead of a guess.
+
+Measure it against the answer keys (boxes are flattened as a detector would
+give them, optionally corrupted):
+
+```
+python -m shelfsense.eval.compliance --split test                     # perfect detections
+python -m shelfsense.eval.compliance --split test --noise realistic   # simulated perception errors
+```
+
+On the 500-shelf test set with perfect detections: 99.8% of shelves get
+exactly the right violations, 100% recall on every violation type, mean score
+error 0.01 points, about 8 ms per shelf. With simulated perception errors the
+engine passes them through about one-to-one (a misidentified product really
+does look like a misplaced item), so its accuracy is bounded by stage 3.
+
+`streamlit run shelfsense/generator/preview.py` has an "Engine vs answer key"
+tab that shows the audit drawn on the shelf next to the truth.
 
 ## Compliance rules
 

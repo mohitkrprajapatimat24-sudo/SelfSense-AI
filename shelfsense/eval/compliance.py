@@ -82,63 +82,75 @@ def evaluate(split: str, noise: dict, seed: int = 0, limit: int | None = None) -
     files = sorted((SYNTHETIC / split / "answers").glob("*.json"))[:limit]
     rng = random.Random(seed)
 
-    tp, fp, fn = Counter(), Counter(), Counter()
-    exact, review_flags, slot_ok, slot_total = 0, 0, 0, 0
-    score_err, band_ok = [], 0
-    worst = []
+    scorer = AuditScorer()
     for f in files:
         key = load_answer(f)
         items, tags, gaps = corrupt(*flatten(key.shelf_map), catalogue, noise, rng)
         sm = build_shelf_map(key.image_id, key.shelf_map.width, key.shelf_map.height, items, tags, gaps)
-        result = audit(sm, planograms[key.planogram_id], catalogue)
+        scorer.add(key, audit(sm, planograms[key.planogram_id], catalogue))
+    return {"split": split, "noise": noise, **scorer.report()}
 
+
+class AuditScorer:
+    """Compares engine audits with answer keys, one image at a time."""
+
+    def __init__(self):
+        self.tp, self.fp, self.fn = Counter(), Counter(), Counter()
+        self.images = self.exact = self.review_flags = self.slot_ok = self.slot_total = self.band_ok = 0
+        self.score_err: list[float] = []
+        self.worst: list[tuple[float, str]] = []
+
+    def add(self, key, result) -> None:
+        self.images += 1
         truth = Counter(key_of(v) for v in key.violations)
         found = Counter(key_of(v) for v in result.violations if v.type != ViolationType.NEEDS_REVIEW)
-        review_flags += sum(1 for v in result.violations if v.type == ViolationType.NEEDS_REVIEW)
+        self.review_flags += sum(1 for v in result.violations if v.type == ViolationType.NEEDS_REVIEW)
         for k in truth | found:
             t, p = truth[k], found[k]
-            tp[k[0]] += min(t, p)
-            fn[k[0]] += max(0, t - p)
-            fp[k[0]] += max(0, p - t)
-        exact += truth == found
+            self.tp[k[0]] += min(t, p)
+            self.fn[k[0]] += max(0, t - p)
+            self.fp[k[0]] += max(0, p - t)
+        self.exact += truth == found
 
         by_pos = {(s.row, s.position): s for s in key.slots}
         for s in result.slots:
             t = by_pos[(s.row, s.position)]
-            slot_total += 1
-            slot_ok += (sorted(map(str, s.contents)) == sorted(map(str, t.contents))
-                        and s.tag_sku == t.tag_sku and s.tag_price == t.tag_price)
+            self.slot_total += 1
+            self.slot_ok += (sorted(map(str, s.contents)) == sorted(map(str, t.contents))
+                             and s.tag_sku == t.tag_sku and s.tag_price == t.tag_price)
 
         err = abs(result.score.score - key.score.score)
-        score_err.append(err)
-        band_ok += result.score.band == key.score.band
-        worst.append((err, key.image_id))
+        self.score_err.append(err)
+        self.band_ok += result.score.band == key.score.band
+        self.worst.append((err, key.image_id))
 
-    types = sorted(set(tp) | set(fp) | set(fn))
-    per_type = {}
-    for t in types:
-        p = tp[t] / (tp[t] + fp[t]) if tp[t] + fp[t] else 1.0
-        r = tp[t] / (tp[t] + fn[t]) if tp[t] + fn[t] else 1.0
-        per_type[t] = {"precision": round(p, 4), "recall": round(r, 4),
-                       "f1": round(2 * p * r / (p + r), 4) if p + r else 0.0,
-                       "true": tp[t] + fn[t], "found": tp[t] + fp[t]}
-    T, F, N = sum(tp.values()), sum(fp.values()), sum(fn.values())
-    return {
-        "split": split, "images": len(files), "noise": noise,
-        "overall": {"precision": round(T / (T + F), 4) if T + F else 1.0,
-                    "recall": round(T / (T + N), 4) if T + N else 1.0},
-        "per_type": per_type,
-        "images_exactly_right": round(exact / len(files), 4),
-        "slots_exactly_right": round(slot_ok / slot_total, 4),
-        "score_mae": round(float(np.mean(score_err)), 2),
-        "band_accuracy": round(band_ok / len(files), 4),
-        "needs_review_flags": review_flags,
-        "worst_images": [i for _, i in sorted(worst, reverse=True)[:5]],
-    }
+    def report(self) -> dict:
+        tp, fp, fn = self.tp, self.fp, self.fn
+        per_type = {}
+        for t in sorted(set(tp) | set(fp) | set(fn)):
+            p = tp[t] / (tp[t] + fp[t]) if tp[t] + fp[t] else 1.0
+            r = tp[t] / (tp[t] + fn[t]) if tp[t] + fn[t] else 1.0
+            per_type[t] = {"precision": round(p, 4), "recall": round(r, 4),
+                           "f1": round(2 * p * r / (p + r), 4) if p + r else 0.0,
+                           "true": tp[t] + fn[t], "found": tp[t] + fp[t]}
+        T, F, N = sum(tp.values()), sum(fp.values()), sum(fn.values())
+        n = max(1, self.images)
+        return {
+            "images": self.images,
+            "overall": {"precision": round(T / (T + F), 4) if T + F else 1.0,
+                        "recall": round(T / (T + N), 4) if T + N else 1.0},
+            "per_type": per_type,
+            "images_exactly_right": round(self.exact / n, 4),
+            "slots_exactly_right": round(self.slot_ok / max(1, self.slot_total), 4),
+            "score_mae": round(float(np.mean(self.score_err)), 2) if self.score_err else 0.0,
+            "band_accuracy": round(self.band_ok / n, 4),
+            "needs_review_flags": self.review_flags,
+            "worst_images": [i for _, i in sorted(self.worst, reverse=True)[:5]],
+        }
 
 
 def print_report(rep: dict) -> None:
-    print(f"\n{rep['images']} images from '{rep['split']}', noise: {rep['noise'] or 'none'}\n")
+    print(f"\n{rep['images']} images from '{rep['split']}', noise: {rep.get('noise') or 'none'}\n")
     print(f"{'violation':<14}{'precision':>10}{'recall':>9}{'f1':>8}{'true':>7}{'found':>7}")
     for t, m in rep["per_type"].items():
         print(f"{t:<14}{m['precision']:>10.1%}{m['recall']:>9.1%}{m['f1']:>8.3f}{m['true']:>7}{m['found']:>7}")

@@ -8,7 +8,7 @@ from PIL import Image
 from pydantic import BaseModel
 
 from ..compliance.rules import compute_score, evaluate_slots
-from ..schemas import (YOLO_CLASSES, CatalogueItem, DetClass, Planogram, ScoreBreakdown,
+from ..schemas import (YOLO_CLASSES, BBox, CatalogueItem, DetClass, Planogram, ScoreBreakdown,
                        ShelfMap, SlotState, Violation)
 from .augment import augment
 from .mistakes import Mistake, inject_mistakes, perfect_state
@@ -31,15 +31,32 @@ class AnswerKey(BaseModel):
     revenue_at_risk: float
 
 
+def resize_sample(img: Image.Image, shelf_map: ShelfMap, max_side: int) -> tuple[Image.Image, ShelfMap]:
+    f = max_side / max(img.size)
+    if f >= 1:
+        return img, shelf_map
+    img = img.resize((round(img.width * f), round(img.height * f)), Image.LANCZOS)
+    m = shelf_map.model_copy(deep=True)
+    m.width, m.height = img.width, img.height
+    for row in m.rows:
+        row.y_top, row.y_bottom = row.y_top * f, row.y_bottom * f
+        for obj in row.items + row.tags + row.gaps:
+            b = obj.bbox
+            obj.bbox = BBox(x1=b.x1 * f, y1=b.y1 * f, x2=b.x2 * f, y2=b.y2 * f)
+    return img, m
+
+
 def generate_sample(planogram: Planogram, catalogue: dict[str, CatalogueItem], packs: PackLibrary,
                     seed: list[int], image_id: str, do_augment: bool = True,
-                    inject: bool = True) -> tuple[Image.Image, AnswerKey]:
+                    inject: bool = True, max_side: int | None = None) -> tuple[Image.Image, AnswerKey]:
     rng = np.random.default_rng(seed)
     slots = perfect_state(planogram, catalogue)
     mistakes = inject_mistakes(slots, planogram, catalogue, rng) if inject else []
     img, shelf_map = render_shelf(planogram, slots, catalogue, packs, rng, image_id)
     if do_augment:
         img, shelf_map = augment(img, shelf_map, rng)
+    if max_side:
+        img, shelf_map = resize_sample(img, shelf_map, max_side)
     violations = evaluate_slots(slots, planogram, catalogue)
     key = AnswerKey(
         image_id=image_id, image_file=f"{image_id}.jpg", planogram_id=planogram.planogram_id, seed=seed,

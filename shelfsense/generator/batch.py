@@ -22,12 +22,13 @@ def init_worker(planogram_ids: list[str] | None):
 
 
 def make_one(job: tuple) -> dict:
-    split_dir, split, seed, idx, do_augment = job
+    split_dir, split, seed, idx, do_augment, max_side = job
     planograms = _ctx["planograms"]
     planogram = planograms[idx % len(planograms)]
     image_id = f"{split}_{idx:05d}"
     sample_seed = [seed, SPLIT_CODES.get(split, 9), idx]
-    img, key = generate_sample(planogram, _ctx["catalogue"], _ctx["packs"], sample_seed, image_id, do_augment)
+    img, key = generate_sample(planogram, _ctx["catalogue"], _ctx["packs"], sample_seed, image_id, do_augment,
+                               max_side=max_side)
     quality = int(np.random.default_rng(sample_seed + [99]).integers(60, 96))
     write_sample(img, key, Path(split_dir), quality)
     return {"score": key.score.score, "band": key.score.band, "violations": [v.type.value for v in key.violations],

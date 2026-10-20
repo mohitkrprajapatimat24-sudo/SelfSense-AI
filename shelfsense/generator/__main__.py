@@ -43,6 +43,8 @@ def main():
     ap.add_argument("--planograms", help="comma-separated IDs, default all")
     ap.add_argument("--workers", type=int, default=max(1, min(8, (os.cpu_count() or 2) - 1)))
     ap.add_argument("--no-augment", action="store_true")
+    ap.add_argument("--max-side", type=int, help="downscale images (e.g. 1280 for detector training); "
+                                                 "default keeps full resolution, which OCR needs")
     ap.add_argument("--out", type=Path, default=SYNTHETIC)
     args = ap.parse_args()
 
@@ -54,7 +56,7 @@ def main():
         (split_dir / sub).mkdir(parents=True)
 
     ids = args.planograms.split(",") if args.planograms else None
-    jobs = [(str(split_dir), args.split, args.seed, i, not args.no_augment) for i in range(args.n)]
+    jobs = [(str(split_dir), args.split, args.seed, i, not args.no_augment, args.max_side) for i in range(args.n)]
     t0 = time.time()
     with ProcessPoolExecutor(args.workers, initializer=init_worker, initargs=(ids,)) as pool:
         results = []

@@ -70,13 +70,13 @@ def augment(img: Image.Image, shelf_map: ShelfMap, rng: np.random.Generator) -> 
         xx = np.arange(w)
         a += (rng.uniform(15, 40) * np.exp(-((xx - x0) / (w * 0.08)) ** 2))[None, :, None]
 
-    # sensor: blur and noise
+    # sensor: focus blur and hand shake of a few pixels (about 1-3 mm at phone-photo resolution)
     roll = rng.random()
     if roll < 0.25:
         k = int(rng.choice([3, 5]))
         a = cv2.GaussianBlur(a, (k, k), 0)
     elif roll < 0.4:
-        k = int(rng.integers(5, 10))
+        k = int(rng.integers(3, 9))
         kernel = np.zeros((k, k), np.float32)
         kernel[k // 2, :] = 1.0 / k
         if rng.random() < 0.5:

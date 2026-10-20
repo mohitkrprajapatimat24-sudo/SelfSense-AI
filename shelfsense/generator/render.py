@@ -10,9 +10,10 @@ from .packs import PackLibrary, fit_font, font, random_unknown_style
 SIDE_MM = 35          # bay uprights
 TOP_MM = 50
 BOTTOM_MM = 40
-LIP_MM = 40           # shelf edge strip that holds the price tags
-TAG_H_MM = 30
-TAG_W_MM = 70
+LIP_MM = 45           # shelf edge strip that holds the price tags
+TAG_H_MM = 36
+TAG_W_MM = 78
+SCALE_RANGE = (1.6, 2.4)   # px per mm; a 12 MP phone photo of a 1.2 m bay is about 3
 HEADROOM = 1.12
 
 BACK_PANELS = [(232, 228, 220), (214, 218, 224), (242, 242, 240), (205, 195, 178), (70, 72, 78)]
@@ -43,14 +44,14 @@ def _draw_tag(img: Image.Image, box: BBox, sku: str, price: float, catalogue, rn
     w, h = box.w, box.h
     name = catalogue[sku].name if sku in catalogue else sku
     price_text = f"₹{price:.2f}" if rng.random() < 0.7 else f"₹ {price:g}"
-    nf = font(max(6, int(h * 0.17)))
-    while len(name) > 4 and nf.getlength(name) > w * 0.92:
+    nf = font(max(6, int(h * 0.19)))
+    while len(name) > 4 and nf.getlength(name) > w * 0.94:
         name = name[:-1]
-    pf = fit_font(price_text, w * 0.9, h * 0.46, bold=True)
-    sf = fit_font(sku, w * 0.92, h * 0.17, bold=False)
+    pf = fit_font(price_text, w * 0.9, h * 0.44, bold=True)
+    sf = fit_font(sku, w * 0.92, h * 0.15, bold=False)
     d.text((box.cx, box.y1 + h * 0.15), name, font=nf, anchor="mm", fill=(30, 30, 30))
-    d.text((box.cx, box.y1 + h * 0.52), price_text, font=pf, anchor="mm", fill=(0, 0, 0))
-    d.text((box.cx, box.y1 + h * 0.87), sku, font=sf, anchor="mm", fill=(60, 60, 60))
+    d.text((box.cx, box.y1 + h * 0.53), price_text, font=pf, anchor="mm", fill=(0, 0, 0))
+    d.text((box.cx, box.y1 + h * 0.88), sku, font=sf, anchor="mm", fill=(60, 60, 60))
     return f"{name} {price_text} {sku}"
 
 
@@ -66,7 +67,7 @@ def _jitter_pack(pack: Image.Image, rng: np.random.Generator) -> Image.Image:
 def render_shelf(planogram: Planogram, slots: list[SlotState], catalogue: dict[str, CatalogueItem],
                  packs: PackLibrary, rng: np.random.Generator, image_id: str,
                  scale: float | None = None) -> tuple[Image.Image, ShelfMap]:
-    s = scale or float(rng.uniform(0.75, 1.1))       # pixels per mm
+    s = scale or float(rng.uniform(*SCALE_RANGE))
     px = lambda mm: int(round(mm * s))  # noqa: E731
 
     zone_mm = [max(catalogue[sl.sku].height_mm for sl in r.slots) * HEADROOM + 15 for r in planogram.rows]

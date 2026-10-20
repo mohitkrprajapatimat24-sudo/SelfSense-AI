@@ -32,7 +32,7 @@ SLM_REPO = "Qwen/Qwen2.5-3B-Instruct-GGUF"
 SLM_FILE = "qwen2.5-3b-instruct-q4_k_m.gguf"
 LLAMA_CPP_TAG = "b11720"
 LLAMA_CPP_URL = "https://github.com/ggml-org/llama.cpp/releases/download/{tag}/llama-{tag}-bin-{asset}"
-TORCH_CUDA_INDEX = "https://download.pytorch.org/whl/cu124"
+TORCH_CUDA_INDEX = "https://download.pytorch.org/whl/cu126"   # runs on NVIDIA drivers >= 525
 TORCH_CPU_INDEX = "https://download.pytorch.org/whl/cpu"
 
 

@@ -25,7 +25,7 @@ llama.cpp CPU runtime into `tools/`.
 shelfsense/
   schemas.py        data contracts shared by every stage
   data.py           catalogue and planogram loading + validation
-  perception/       detections -> shelf rows (models arrive in stage 3)
+  perception/       detector, product matcher, tag OCR, video frames, shelf rows
   compliance/       alignment, rules, score, ranked audit
   generator/        synthetic shelf generator
   eval/             accuracy against the answer keys
@@ -105,6 +105,53 @@ does look like a misplaced item), so its accuracy is bounded by stage 3.
 
 `streamlit run shelfsense/generator/preview.py` has an "Engine vs answer key"
 tab that shows the audit drawn on the shelf next to the truth.
+
+## Perception (stage 3)
+
+`shelfsense.perception.pipeline.Perception` turns a shelf photo into a
+`ShelfMap`; everything runs on CPU through ONNX Runtime (no torch at runtime).
+
+| Step | Model | Notes |
+|---|---|---|
+| Detect | YOLO11n, fine-tuned, ONNX (10 MB) | classes: product, price_tag, empty_gap; 1024 px input |
+| Identify | DINOv2-small int8 ONNX (24 MB) + colour histogram + FAISS | 65% DINOv2 / 35% colour similarity; below a calibrated threshold -> UNKNOWN |
+| Read tags | RapidOCR (PaddleOCR models on ONNX) | price regex tolerant of ₹ misreads; SKU from the printed item code, else fuzzy product name |
+| Rows | `perception/shelf_map.py` | as in stage 2 |
+
+Video uploads are reduced to their sharpest frame (`perception/preprocess.py`).
+Low-confidence identifications and tag reads become NEEDS_REVIEW.
+
+Build the models (GPU used for training when available):
+
+```
+python -m shelfsense.generator --split train --n 2000 --seed 1 --max-side 1280
+python -m shelfsense.generator --split val --n 300 --seed 2 --max-side 1280
+python -m shelfsense.perception.train_detector        # ~1 h on an RTX 4060
+python -m shelfsense.perception.build_gallery         # DINOv2 -> ONNX int8, gallery, unknown threshold
+python -m shelfsense.eval.perception --split test     # targets + end-to-end
+```
+
+Results on the 500-shelf synthetic test set (placeholder packs, 4 CPU threads,
+i7-13650HX):
+
+| Target (abstract section 11) | Target | Result |
+|---|---|---|
+| Product detection mAP@0.5 | >= 0.85 | 0.995 (mAP@0.5:0.95 0.975) |
+| SKU identification top-1 | >= 90% | 98.1% |
+| Price OCR exact match | >= 90% | 97.4% (tag SKU 97.7%) |
+| Empty-gap recall | >= 90% | 99.5% |
+| Latency per image | <= 3 s | 1.8 s mean, 2.7 s p90 (detect 0.1, identify 0.9, OCR 0.7) |
+
+End to end, photo to audit: 94.8% violation precision, 94.3% recall, 84.6%
+of shelves with exactly the right violations, score error 2.6 points, 0.7
+human-review flags per shelf.
+
+**Caveat.** These numbers are on synthetic shelves drawn with placeholder
+packs, which are easier than real packaging. Add real product photos
+(`data/raw/<SKU>/`, then `prepare_products`), regenerate the datasets,
+retrain and rebuild the gallery to get representative numbers, and check on
+real phone photos. The abstract's SKU-110K subset is not used yet (a ~13 GB
+download); it would mainly help the product detector on real shelves.
 
 ## Compliance rules
 

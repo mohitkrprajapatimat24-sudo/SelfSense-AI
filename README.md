@@ -5,7 +5,35 @@ Detects products, price tags and empty gaps, checks them against the planogram
 and catalogue, and produces a 0-100 compliance score, the exact violations and a
 ranked task list for store staff. Runs fully offline on CPU.
 
-## Setup
+## Try it (one command, no setup)
+
+The whole app (dashboard, API, vision models and Qwen2.5-3B) is published as
+one Docker image: [ashishsingh5042/shelfsense](https://hub.docker.com/r/ashishsingh5042/shelfsense)
+(tags `latest`, `1.0`). No GPU, no Python, no training.
+
+**You need:** [Docker Desktop](https://www.docker.com/products/docker-desktop/),
+about 8 GB of RAM and 12 GB of free disk, on a 64-bit Intel/AMD machine
+(Windows, Linux or an Intel Mac).
+
+1. Install Docker Desktop and start it. On Windows, accept enabling WSL 2 if
+   asked. Wait until it shows **Engine running**.
+2. Open a terminal and run:
+   ```
+   docker run -d --name shelfsense --cpus 4 --memory 8g -p 8501:8501 -p 8000:8000 -v shelfsense-data:/data ashishsingh5042/shelfsense:latest
+   ```
+   The first run downloads about 3 GB.
+3. Wait about 30 seconds, then open:
+   - **Dashboard:** http://localhost:8501. Pick a sample shelf in the
+     sidebar and press *Run audit*. Try the hand-held video sample too.
+   - **API docs:** http://localhost:8000/docs
+4. Stop it with `docker stop shelfsense`, start it again with
+   `docker start shelfsense`, remove it with `docker rm -f shelfsense`.
+
+Everything runs offline inside the container; the internet is only used to
+download the image. The language model takes about 20 seconds longer than
+the rest to load; until it is ready, task lists use the template wording.
+
+## Setup (to develop or retrain)
 
 Needs Python 3.11.
 
@@ -273,3 +301,19 @@ Bands: >= 90 Good, 70-89 Needs attention, < 70 Critical.
 ```
 pytest
 ```
+
+## Licences of bundled models and assets
+
+| Component | Licence |
+|---|---|
+| YOLO11n base weights and Ultralytics (detector training) | AGPL-3.0 |
+| DINOv2-small | Apache-2.0 |
+| Qwen2.5-3B-Instruct | Apache-2.0 |
+| PaddleOCR models via RapidOCR | Apache-2.0 |
+| llama.cpp | MIT |
+| Noto Sans fonts | SIL Open Font License 1.1 |
+
+Because the fine-tuned detector derives from YOLO11 (AGPL-3.0), this project
+and the published Docker image are shared as open source under compatible
+terms. Brand names on the synthetic placeholder packs are used only to make
+test shelves recognisable; no real product images are included.

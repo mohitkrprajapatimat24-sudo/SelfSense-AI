@@ -1,0 +1,20 @@
+# docker compose -f docker/compose.yml up --build
+# Dashboard: http://localhost:8501   API docs: http://localhost:8000/docs
+services:
+  shelfsense:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: shelfsense:latest
+    ports:
+      - "8501:8501"
+      - "8000:8000"
+    cpus: 4            # edge simulation: same budget as a Raspberry Pi 5 (8 GB)
+    mem_limit: 8g
+    memswap_limit: 8g  # no swapping beyond the 8 GB
+    volumes:
+      - shelfsense-data:/data
+    restart: unless-stopped
+
+volumes:
+  shelfsense-data:

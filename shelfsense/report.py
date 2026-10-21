@@ -119,8 +119,9 @@ def build_pdf(record) -> bytes:
     if r.violations:
         rows = [[Paragraph("#", S["cellb"]), Paragraph("Action", S["cellb"]), Paragraph("Type", S["cellb"]),
                  Paragraph("At risk / day", S["cellb"])]]
-        for i, v in enumerate(r.violations, 1):
-            rows.append([Paragraph(str(i), S["cell"]), Paragraph(v.action, S["cell"]),
+        tasks = record.tasks if len(record.tasks) == len(r.violations) else [v.action for v in r.violations]
+        for i, (task, v) in enumerate(zip(tasks, r.violations), 1):
+            rows.append([Paragraph(str(i), S["cell"]), Paragraph(task, S["cell"]),
                          Paragraph(LABELS[v.type], S["cell"]),
                          Paragraph(_rupees(v.revenue_at_risk) if v.revenue_at_risk else "–", S["cell"])])
         t = Table(rows, colWidths=[8 * mm, width - 8 * mm - 30 * mm - 26 * mm, 30 * mm, 26 * mm], repeatRows=1)
@@ -132,6 +133,9 @@ def build_pdf(record) -> bytes:
 
     # notes and how the photo was read
     notes = list(r.notes)
+    if record.tasks_source.startswith("slm"):
+        notes.append("Task wording and summary written by Qwen2.5-3B on this device and checked against the audit "
+                     "(locations must match); the order and the findings come from the rules engine.")
     if record.frame_info:
         notes.append(f"Video: frame {record.frame_info.get('frame')} of {record.frame_info.get('frames')} "
                      f"was the sharpest and was audited.")

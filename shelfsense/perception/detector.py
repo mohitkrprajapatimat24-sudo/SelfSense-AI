@@ -17,9 +17,10 @@ class Detector:
     def __init__(self, onnx_path: Path, threads: int = 4):
         import onnxruntime as ort
 
-        opts = ort.SessionOptions()
-        opts.intra_op_num_threads = threads
-        self.session = ort.InferenceSession(str(onnx_path), opts, providers=["CPUExecutionProvider"])
+        from .runtime import session_options
+
+        self.session = ort.InferenceSession(str(onnx_path), session_options(threads),
+                                            providers=["CPUExecutionProvider"])
         inp = self.session.get_inputs()[0]
         self.input_name = inp.name
         self.size = int(inp.shape[2])

@@ -70,9 +70,10 @@ class Embedder:
     def __init__(self, onnx_path: Path, threads: int = 4, color_weight: float = COLOR_WEIGHT):
         import onnxruntime as ort
 
-        opts = ort.SessionOptions()
-        opts.intra_op_num_threads = threads
-        self.session = ort.InferenceSession(str(onnx_path), opts, providers=["CPUExecutionProvider"])
+        from .runtime import session_options
+
+        self.session = ort.InferenceSession(str(onnx_path), session_options(threads),
+                                            providers=["CPUExecutionProvider"])
         self.input_name = self.session.get_inputs()[0].name
         self.color_weight = color_weight
 

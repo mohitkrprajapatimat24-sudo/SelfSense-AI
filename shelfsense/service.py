@@ -5,6 +5,7 @@ Used by both the API and the dashboard:
 """
 
 import json
+import os
 import sqlite3
 import tempfile
 import time
@@ -20,6 +21,7 @@ from .data import load_catalogue, load_planograms
 from .paths import ROOT
 from .perception.preprocess import VIDEO_TYPES, load_image, load_upload
 from .schemas import AuditResult, ViolationType as V
+from .slm.writer import template
 from .viz import draw_audit
 
 OUTPUTS = ROOT / "outputs"
@@ -37,7 +39,10 @@ class AuditRecord(BaseModel):
     sharpness: float = 0.0
     blurry: bool = False
     frame_info: dict = {}           # for videos: which frame was audited
-    summary: str = ""               # plain-language summary (stage 5)
+    summary: str = ""               # plain-language summary for the manager
+    tasks: list[str] = []           # one staff instruction per violation, same order
+    tasks_source: str = ""          # "slm", "slm+template" or "template"
+    tasks_ms: float = 0.0
     image_path: str = ""
     annotated_path: str = ""
 
@@ -105,13 +110,16 @@ class History:
 
 
 class AuditService:
-    def __init__(self, folder: Path = OUTPUTS, threads: int = 4, config: AuditConfig | None = None):
+    def __init__(self, folder: Path = OUTPUTS, threads: int = 4, config: AuditConfig | None = None,
+                 use_slm: bool | None = None):
         self.catalogue = load_catalogue()
         self.planograms = load_planograms(self.catalogue)
         self.history = History(folder)
         self.threads = threads
         self.config = config or AuditConfig()
+        self.use_slm = os.environ.get("SHELFSENSE_SLM", "on") != "off" if use_slm is None else use_slm
         self._perception = None
+        self._writer = None
 
     @property
     def perception(self):
@@ -119,6 +127,25 @@ class AuditService:
             from .perception.pipeline import Perception
             self._perception = Perception(self.catalogue, threads=self.threads)
         return self._perception
+
+    @property
+    def writer(self):
+        if self._writer is None:
+            from .slm.writer import ActionWriter
+            self._writer = ActionWriter(self.catalogue, threads=self.threads)
+        return self._writer
+
+    def write_tasks(self, record: AuditRecord) -> AuditRecord:
+        """Have the language model write the task list (tens of seconds on CPU); template if unavailable."""
+        from .slm.writer import template
+
+        if self.use_slm:
+            tl = self.writer.write(record.result, record.bay_id, record.store_id)
+        else:
+            tl = template(record.result, record.bay_id)
+        record.summary, record.tasks, record.tasks_source, record.tasks_ms = tl.summary, tl.tasks, tl.source, tl.ms
+        self.history.add(record)
+        return record
 
     def audit_image(self, img: Image.Image, planogram_id: str, store_id: str = "Store 214",
                     source: str = "upload", frame_info: dict | None = None) -> AuditRecord:
@@ -138,7 +165,9 @@ class AuditService:
         folder = self.history.audit_dir(audit_id)
         img.save(folder / "photo.jpg", quality=90)
         draw_audit(img, result).save(folder / "annotated.jpg", quality=88)
+        quick = template(result, planogram.bay_id)       # instant; the language model can rewrite it after
         record = AuditRecord(
+            summary=quick.summary, tasks=quick.tasks, tasks_source=quick.source,
             audit_id=audit_id, created_at=now.isoformat(timespec="seconds"), store_id=store_id,
             bay_id=planogram.bay_id, planogram_id=planogram_id, source=source, result=result,
             timings_ms=perceived.timings_ms, sharpness=perceived.sharpness, blurry=perceived.blurry,

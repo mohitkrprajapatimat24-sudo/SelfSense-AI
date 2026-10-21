@@ -14,6 +14,7 @@ from .detector import Detector
 from .identify import Embedder, ProductIndex
 from .ocr import TagReader
 from .preprocess import sharpness
+from .runtime import limit_threads
 from .shelf_map import build_shelf_map
 
 DETECTOR_ONNX = MODELS / "detector" / "shelfsense_yolo11n.onnx"
@@ -52,6 +53,7 @@ class Perception:
                        (gallery / "gallery.faiss", "python -m shelfsense.perception.build_gallery")]:
             if not p.exists():
                 raise FileNotFoundError(f"{p} is missing. Create it with: {how}")
+        limit_threads(threads)
         self.catalogue = catalogue or load_catalogue()
         self.detector = Detector(detector, threads)
         self.embedder = Embedder(embedder, threads)

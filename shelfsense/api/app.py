@@ -30,7 +30,11 @@ async def lifespan(app: FastAPI):
                            threads=int(os.environ.get("SHELFSENSE_THREADS", "4")))
     if os.environ.get("SHELFSENSE_PRELOAD", "1") == "1":
         service.perception                          # load models now, not on the first request
+        if service.use_slm:
+            service.writer.available()              # start the llama.cpp server too
     yield
+    if service._writer is not None:
+        service._writer.server.stop()
 
 
 app = FastAPI(title="ShelfSense AI", version="1.0",
@@ -47,7 +51,9 @@ def _record(audit_id: str) -> AuditRecord:
 
 @app.get("/health")
 def health():
+    from ..slm.server import is_up
     return {"status": "ok", "models_loaded": service._perception is not None,
+            "language_model": "up" if is_up() else ("off" if not service.use_slm else "down (template used)"),
             "planograms": len(service.planograms), "skus": len(service.catalogue)}
 
 
@@ -60,7 +66,9 @@ def planograms():
 @app.post("/audit", response_model=AuditRecord)
 def run_audit(file: UploadFile = File(..., description="Shelf photo or short video"),
               planogram_id: str = Form(..., description="e.g. P01"),
-              store_id: str = Form("Store 214")):
+              store_id: str = Form("Store 214"),
+              tasks: str = Form("slm", description="'slm': Qwen writes the task list (adds ~10-30 s); "
+                                                   "'template': instant")):
     # a plain def: FastAPI runs it in a worker thread, so a 2 s audit does not block other requests
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in IMAGE_TYPES | VIDEO_TYPES:
@@ -71,9 +79,16 @@ def run_audit(file: UploadFile = File(..., description="Shelf photo or short vid
     if len(data) > MAX_UPLOAD_MB * 1024 * 1024:
         raise HTTPException(413, f"File larger than {MAX_UPLOAD_MB} MB")
     try:
-        return service.audit_bytes(data, file.filename, planogram_id, store_id)
+        rec = service.audit_bytes(data, file.filename, planogram_id, store_id)
     except (ValueError, OSError) as e:           # unreadable image or video
         raise HTTPException(422, f"Could not read the file: {e}")
+    return service.write_tasks(rec) if tasks == "slm" and rec.result.violations else rec
+
+
+@app.post("/audits/{audit_id}/tasks", response_model=AuditRecord)
+def rewrite_tasks(audit_id: str):
+    """(Re)write the staff task list for an earlier audit with the language model."""
+    return service.write_tasks(_record(audit_id))
 
 
 @app.get("/audits")

@@ -52,7 +52,7 @@ def get_service() -> AuditService:
 
 
 @st.cache_data(show_spinner=False)
-def pdf_bytes(audit_id: str) -> bytes:
+def pdf_bytes(audit_id: str, tasks_source: str) -> bytes:     # tasks_source: rebuild once Qwen has written
     return build_pdf(get_service().history.get(audit_id))
 
 
@@ -117,6 +117,7 @@ if run:
             else:
                 rec = svc.audit_file(SAMPLES / sample["file"], planogram_id, store)
             st.session_state["audit_id"] = rec.audit_id
+            st.session_state["write_tasks"] = rec.audit_id if rec.result.violations else None
         except Exception as e:      # unreadable upload, etc.
             st.error(f"Could not audit that file: {e}")
 
@@ -166,21 +167,34 @@ with right:
     t6.metric("Check by hand", c["review"])
     st.metric("Revenue at risk", f"₹{r.revenue_at_risk:,.0f} / day")
 
-    st.markdown("**Recommended actions, most urgent first**")
-    if rec.summary:
-        st.write(rec.summary)
-    if r.violations:
-        rows = []
-        for i, v in enumerate(r.violations[:8], 1):
-            risk = f" <span class='r'>· ₹{v.revenue_at_risk:,.0f}/day at risk</span>" if v.revenue_at_risk else ""
-            rows.append(f"<div class='ss-act'><span class='n'>{i}.</span>{v.action}{risk}</div>")
-        st.markdown("".join(rows), unsafe_allow_html=True)
-        if len(r.violations) > 8:
-            st.caption(f"+ {len(r.violations) - 8} more in the Violations tab and the PDF")
-    else:
-        st.success("Nothing to do: the shelf matches the planogram.")
+    actions_box = st.container()
+    if st.session_state.get("write_tasks") == rec.audit_id and svc.use_slm:
+        with st.spinner("Qwen2.5-3B is writing the task list (on CPU, offline) ..."):
+            rec = svc.write_tasks(rec)
+        st.session_state["write_tasks"] = None
 
-    st.download_button("Download PDF report", pdf_bytes(rec.audit_id), file_name=f"shelfsense_{rec.audit_id}.pdf",
+    with actions_box:
+        source = {"slm": "written by Qwen2.5-3B, checked against the audit",
+                  "slm+template": "written by Qwen2.5-3B; some lines kept from the template after checking",
+                  "template": "template"}.get(rec.tasks_source, "")
+        st.markdown(f"**Recommended actions, most urgent first** <span class='r'>· {source}</span>",
+                    unsafe_allow_html=True)
+        if rec.summary:
+            st.write(rec.summary)
+        tasks = rec.tasks or [v.action for v in r.violations]
+        if tasks:
+            rows = []
+            for i, (task, v) in enumerate(zip(tasks[:8], r.violations), 1):
+                risk = f" <span class='r'>· ₹{v.revenue_at_risk:,.0f}/day at risk</span>" if v.revenue_at_risk else ""
+                rows.append(f"<div class='ss-act'><span class='n'>{i}.</span>{task}{risk}</div>")
+            st.markdown("".join(rows), unsafe_allow_html=True)
+            if len(tasks) > 8:
+                st.caption(f"+ {len(tasks) - 8} more in the Violations tab and the PDF")
+        else:
+            st.success("Nothing to do: the shelf matches the planogram.")
+
+    st.download_button("Download PDF report", pdf_bytes(rec.audit_id, rec.tasks_source),
+                       file_name=f"shelfsense_{rec.audit_id}.pdf",
                        mime="application/pdf", width="stretch")
 
 # ---------------------------------------------------------------- details
@@ -243,6 +257,8 @@ with tab_d:
     d2.metric("Detect", f"{t.get('detect', 0):.0f} ms")
     d3.metric("Identify products", f"{t.get('identify', 0):.0f} ms")
     d4.metric("Read price tags", f"{t.get('ocr', 0):.0f} ms")
+    if rec.tasks_ms:
+        st.caption(f"Task list written by Qwen2.5-3B in {rec.tasks_ms / 1000:.1f} s (separate from the audit time).")
     st.caption(f"Offline on CPU · photo sharpness {rec.sharpness:.0f} · source {rec.source} · audit {rec.audit_id}")
     if rec.frame_info:
         st.info(f"Video: frame {rec.frame_info['frame']} of {rec.frame_info['frames']} was the sharpest and was audited.")

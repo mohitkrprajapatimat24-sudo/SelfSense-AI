@@ -31,6 +31,7 @@ shelfsense/
   eval/             accuracy against the answer keys
   service.py        one audit end to end + history
   report.py         PDF report
+  slm/              Qwen2.5-3B task writer (llama.cpp server) + template fallback
   api/              FastAPI app
   dashboard/        Streamlit store dashboard
   viz.py            draw boxes and audits over a shelf image
@@ -198,6 +199,60 @@ limit CPU threads.
 Items sent to human review are left out of the score rather than counted as
 failures; the score then says how much of the shelf it covers ("based on 93%
 of checks").
+
+## Language model and edge deployment (stage 5)
+
+**Task writer.** After each audit, Qwen2.5-3B-Instruct (4-bit GGUF, run by
+the llama.cpp server on CPU) rewrites the ranked violations into short staff
+instructions and a one-line summary for the manager. The rules engine still
+decides what is wrong and in which order; the model only words it. Guards in
+`shelfsense/slm/writer.py`:
+
+- output is constrained to JSON with exactly one task per violation;
+- each task must keep its location ("Row 2 Pos 3", and the destination for a
+  move), use the right kind of verb (restock / move / remove / fix tag) and
+  name the right product and no other;
+- the summary may only use numbers and products from the audit;
+- anything that fails falls back to the deterministic template, and so does
+  everything if the model is missing or slow (`SHELFSENSE_SLM=off` forces it).
+
+```
+python -m shelfsense.eval.slm --split test --n 30
+```
+
+On 30 test shelves, 88% of task lines and 87% of summaries come from the
+model, every one checked; about 13 s per shelf on 4 CPU threads.
+
+**Edge container.** `docker/Dockerfile` builds one image with the dashboard,
+the API, the vision models and Qwen. No torch, nothing downloaded at run
+time; llama.cpp is compiled from source for the image.
+
+```
+docker compose -f docker/compose.yml up --build      # 4 vCPU / 8 GB, dashboard :8501, API :8000
+docker run --rm --cpus 4 --memory 8g --network none shelfsense benchmark   # offline benchmark
+```
+
+To move it to another computer without internet:
+`docker save shelfsense | gzip > shelfsense.tar.gz`, copy, then
+`docker load < shelfsense.tar.gz`.
+
+Benchmark inside the container, `--cpus 4 --memory 8g --network none`
+(i7-13650HX host, Docker Desktop):
+
+| | Result |
+|---|---|
+| Internet | none (checked by the benchmark) |
+| Audit per image (target <= 3 s, language model excluded) | 1.85 s mean, 2.31 s p90 |
+| Stages | detect 0.14 s, identify 0.79 s, read tags 0.75 s, rules 0.01 s |
+| Task list by Qwen2.5-3B | ~26 s per audit, once per report |
+| Peak memory, all processes incl. Qwen | 4.2 GB of 8 GB |
+| Models on disk | detector 11 MB, product embedder 24 MB, gallery 0.3 MB, Qwen 2.1 GB |
+| Image size | 5.7 GB |
+
+Inside a CPU quota every library would otherwise start one thread per host
+core and ONNX Runtime threads would spin while idle; capping threads and
+turning spinning off (`shelfsense/perception/runtime.py`, `SHELFSENSE_SPIN=0`
+in the image) took the audit from 5.5 s to 1.85 s.
 
 ## Compliance rules
 

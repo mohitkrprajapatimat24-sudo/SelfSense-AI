@@ -33,6 +33,8 @@ Everything runs offline inside the container; the internet is only used to
 download the image. The language model takes about 20 seconds longer than
 the rest to load; until it is ready, task lists use the template wording.
 
+training and test data set ,images and results for this specific model (trained on synthetic shelves)-> https://drive.google.com/file/d/16za4mJgrRiE2nwPLGf2weDbwYfbIenTE/view?usp=drivesdk
+
 ## Setup (to develop or retrain)
 
 Needs Python 3.11.

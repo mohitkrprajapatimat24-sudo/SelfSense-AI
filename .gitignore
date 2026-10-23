@@ -24,7 +24,6 @@ data/raw/
 data/products/
 runs/
 outputs/
-reports/
 *.db
 *.sqlite
 

@@ -1,0 +1,73 @@
+{
+  "split": "test",
+  "images": 500,
+  "noise": {
+    "drop_items": 0.02,
+    "misid": 0.02,
+    "low_conf": 0.03,
+    "drop_gaps": 0.3,
+    "drop_tags": 0.02,
+    "misread_price": 0.02,
+    "jitter": 0.04
+  },
+  "overall": {
+    "precision": 0.6677,
+    "recall": 0.9319
+  },
+  "per_type": {
+    "EXTRA": {
+      "precision": 0.545,
+      "recall": 0.8647,
+      "f1": 0.6686,
+      "true": 133,
+      "found": 211
+    },
+    "LOW_STOCK": {
+      "precision": 0.5985,
+      "recall": 0.9082,
+      "f1": 0.7216,
+      "true": 632,
+      "found": 959
+    },
+    "MISPLACED": {
+      "precision": 0.6111,
+      "recall": 0.9,
+      "f1": 0.7279,
+      "true": 220,
+      "found": 324
+    },
+    "OUT_OF_STOCK": {
+      "precision": 0.9606,
+      "recall": 0.9889,
+      "f1": 0.9745,
+      "true": 271,
+      "found": 279
+    },
+    "WRONG_LABEL": {
+      "precision": 0.6244,
+      "recall": 0.9852,
+      "f1": 0.7644,
+      "true": 135,
+      "found": 213
+    },
+    "WRONG_PRICE": {
+      "precision": 0.8341,
+      "recall": 0.9745,
+      "f1": 0.8988,
+      "true": 196,
+      "found": 229
+    }
+  },
+  "images_exactly_right": 0.288,
+  "slots_exactly_right": 0.8649,
+  "score_mae": 4.28,
+  "band_accuracy": 0.774,
+  "needs_review_flags": 407,
+  "worst_images": [
+    "test_00229",
+    "test_00309",
+    "test_00283",
+    "test_00036",
+    "test_00221"
+  ]
+}

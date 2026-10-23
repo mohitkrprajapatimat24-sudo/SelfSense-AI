@@ -1,0 +1,34 @@
+{
+  "environment": {
+    "cpus": 20,
+    "memory_gb": 15.7,
+    "os": "Windows AMD64",
+    "threads": 4,
+    "internet": "reachable"
+  },
+  "models_load_s": 1.5,
+  "images": 11,
+  "latency_s_mean": 2.7,
+  "latency_s_p90": 3.62,
+  "latency_s_max": 3.63,
+  "stage_ms_mean": {
+    "detect": 163.8,
+    "identify": 1116.3,
+    "ocr": 1225.8,
+    "audit": 9.7
+  },
+  "peak_memory_gb": 0.58,
+  "model_sizes_mb": {
+    "detector (YOLO11n ONNX)": 10.9,
+    "product embedder (DINOv2-small int8 ONNX)": 24.2,
+    "product gallery (FAISS)": 0.3,
+    "language model (Qwen2.5-3B Q4_K_M)": 2104.9
+  },
+  "language_model": {
+    "available": true,
+    "server_start_s": 9.3,
+    "seconds_mean": null,
+    "lists": []
+  },
+  "meets_3s_target": true
+}

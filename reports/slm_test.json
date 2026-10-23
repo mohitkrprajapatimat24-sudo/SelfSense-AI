@@ -1,0 +1,91 @@
+{
+  "shelves": 30,
+  "tasks": 123,
+  "tasks_from_model": 0.878,
+  "tasks_from_model_by_type": {
+    "EXTRA": 1.0,
+    "LOW_STOCK": 0.88,
+    "MISPLACED": 1.0,
+    "OUT_OF_STOCK": 0.913,
+    "WRONG_LABEL": 0.875,
+    "WRONG_PRICE": 0.6
+  },
+  "summary_from_model": 0.8667,
+  "lists": {
+    "slm": 26,
+    "template": 2,
+    "slm+template": 2
+  },
+  "seconds_mean": 13.4,
+  "seconds_p90": 18.2,
+  "examples": [
+    {
+      "shelf": "test_00000",
+      "summary": "Aisle 3, Bay 2 has a good compliance score of 92/100. The most urgent issue is top-up of Yippee Magic Masala Noodles 70g, Row 1 Pos 2, which is at risk of losing ₹250/day in sales due to incomplete facings.",
+      "tasks": [
+        {
+          "type": "LOW_STOCK",
+          "task": "Top up Yippee Magic Masala Noodles 70g, Row 1 Pos 2",
+          "from": "model"
+        },
+        {
+          "type": "LOW_STOCK",
+          "task": "Top up Maggi Masala Noodles 70g, Row 3 Pos 1",
+          "from": "model"
+        },
+        {
+          "type": "LOW_STOCK",
+          "task": "Top up Knorr Soupy Noodles Masala 70g, Row 1 Pos 3",
+          "from": "model"
+        },
+        {
+          "type": "EXTRA",
+          "task": "Remove unknown product, Row 3 Pos 1",
+          "from": "model"
+        }
+      ]
+    },
+    {
+      "shelf": "test_00002",
+      "summary": "Aisle 1, Bay 4 needs immediate attention. Most urgent: refill 66g Achaari Masti to prevent ₹300/day sales loss.",
+      "tasks": [
+        {
+          "type": "OUT_OF_STOCK",
+          "task": "Restock Bingo Mad Angles Achaari Masti 66g, Row 4 Pos 3: refill 2 facings",
+          "from": "model"
+        },
+        {
+          "type": "MISPLACED",
+          "task": "Move Lay's Classic Salted Chips 52g, Row 3 Pos 3: move to Row 1 Pos 1",
+          "from": "model"
+        },
+        {
+          "type": "WRONG_PRICE",
+          "task": "Fix price tag Uncle Chipps Spicy Treat 50g, Row 4 Pos 1: correct price to ₹20",
+          "from": "model"
+        },
+        {
+          "type": "LOW_STOCK",
+          "task": "Top up Good Day Cashew Cookies 100g, Row 3 Pos 3: add 2 facings",
+          "from": "model"
+        }
+      ]
+    },
+    {
+      "shelf": "test_00004",
+      "summary": "Aisle 3, Bay 2 is mostly compliant but needs immediate attention. Most urgent: refill Maggi Masala Noodles and add one facing of Yippee Magic Masala Noodles.",
+      "tasks": [
+        {
+          "type": "OUT_OF_STOCK",
+          "task": "Top up Maggi Masala Noodles 70g, Row 1 Pos 1: refill 3 facings",
+          "from": "model"
+        },
+        {
+          "type": "LOW_STOCK",
+          "task": "Top up Yippee Magic Masala Noodles 70g, Row 1 Pos 2: add 1 facing",
+          "from": "model"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "split": "test",
+  "images": 500,
+  "threads": 4,
+  "sku_top1": 0.9807,
+  "unknown_recall": 0.7204,
+  "unknown_precision": 0.7204,
+  "sku_low_confidence_rate": 0.015,
+  "top_confusions": [
+    "BIS-HIDESEEK-100 -> BIS-GOODDAY-100: 138",
+    "BIS-PARLEG-250 -> BIS-GOODDAY-100: 36",
+    "BIS-HIDESEEK-100 -> UNKNOWN: 15",
+    "BIS-GOODDAY-100 -> BIS-PARLEG-250: 10",
+    "UNKNOWN -> BIS-OREO-120: 5",
+    "UNKNOWN -> BIS-PARLEG-250: 5",
+    "UNKNOWN -> CHP-BINGO-66: 4",
+    "NDL-KNORR-70 -> NDL-MAGGI-70: 4"
+  ],
+  "price_exact": 0.9736,
+  "tag_sku_accuracy": 0.9773,
+  "gap_recall": 0.9945,
+  "latency_ms_mean": {
+    "detect": 112.3,
+    "identify": 920.2,
+    "ocr": 725.4,
+    "shelf_map": 0.3,
+    "total": 1758.3,
+    "audit": 8.5
+  },
+  "latency_s_p90": 2.71,
+  "end_to_end": {
+    "images": 500,
+    "overall": {
+      "precision": 0.9475,
+      "recall": 0.9433
+    },
+    "per_type": {
+      "EXTRA": {
+        "precision": 0.9358,
+        "recall": 0.7669,
+        "f1": 0.843,
+        "true": 133,
+        "found": 109
+      },
+      "LOW_STOCK": {
+        "precision": 0.9724,
+        "recall": 0.9478,
+        "f1": 0.9599,
+        "true": 632,
+        "found": 616
+      },
+      "MISPLACED": {
+        "precision": 0.8294,
+        "recall": 0.95,
+        "f1": 0.8856,
+        "true": 220,
+        "found": 252
+      },
+      "OUT_OF_STOCK": {
+        "precision": 0.9509,
+        "recall": 1.0,
+        "f1": 0.9748,
+        "true": 271,
+        "found": 285
+      },
+      "WRONG_LABEL": {
+        "precision": 0.9847,
+        "recall": 0.9556,
+        "f1": 0.9699,
+        "true": 135,
+        "found": 131
+      },
+      "WRONG_PRICE": {
+        "precision": 1.0,
+        "recall": 0.9541,
+        "f1": 0.9765,
+        "true": 196,
+        "found": 187
+      }
+    },
+    "images_exactly_right": 0.846,
+    "slots_exactly_right": 0.9215,
+    "score_mae": 2.64,
+    "band_accuracy": 0.86,
+    "needs_review_flags": 371,
+    "worst_images": [
+      "test_00203",
+      "test_00230",
+      "test_00475",
+      "test_00435",
+      "test_00217"
+    ]
+  },
+  "detection": {
+    "map50": 0.995,
+    "per_class_map50": {
+      "product": 0.995,
+      "price_tag": 0.995,
+      "empty_gap": 0.995
+    }
+  }
+}

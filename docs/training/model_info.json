@@ -1,0 +1,48 @@
+{
+  "base_model": {
+    "file": "models/yolo11n.pt",
+    "sha256": "0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1",
+    "created": "2024-09-25T21:10:26.629566",
+    "num_classes": 80,
+    "classes": [
+      "person",
+      "bicycle",
+      "car",
+      "motorcycle",
+      "airplane",
+      "bus",
+      "train",
+      "truck",
+      "boat",
+      "traffic light",
+      "..."
+    ]
+  },
+  "trained_model": {
+    "file": "models/detector/shelfsense_yolo11n.pt",
+    "sha256": "8b1861805eaaaebc3849bd182965f3fd260e2ed4fee1d32cc7c7264382960719",
+    "created": "2026-10-20T21:19:15.352831+05:30",
+    "num_classes": 3,
+    "classes": [
+      "product",
+      "price_tag",
+      "empty_gap"
+    ]
+  },
+  "trained_onnx_sha256": "9459a22e9216943fe6eabdd9bb290200f18f1235a1a0a3c7af4e182ec05581f2",
+  "training": {
+    "epochs": 60,
+    "train_seconds": 2113,
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "train_images": 2000,
+    "val_images": 300,
+    "epoch_1": {
+      "mAP50": 0.98958,
+      "mAP50_95": 0.86655
+    },
+    "epoch_60": {
+      "mAP50": 0.995,
+      "mAP50_95": 0.97392
+    }
+  }
+}

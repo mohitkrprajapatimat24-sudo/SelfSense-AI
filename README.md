@@ -182,6 +182,27 @@ End to end, photo to audit: 94.8% violation precision, 94.3% recall, 84.6%
 of shelves with exactly the right violations, score error 2.6 points, 0.7
 human-review flags per shelf.
 
+### Training evidence
+
+The detector was fine-tuned by us; the full record is in
+[docs/training/](docs/training/):
+
+| | Base `yolo11n.pt` | Our `shelfsense_yolo11n` |
+|---|---|---|
+| Classes | 80 everyday objects (person, bicycle, car, …) | 3 retail classes: product, price_tag, empty_gap |
+| Created | 25 Sep 2024 (Ultralytics) | 20 Oct 2026, trained on an RTX 4060 |
+
+- 60 epochs, 2,000 training and 300 validation shelves, 35 min of training;
+  validation mAP@0.5:0.95 went from 0.867 after epoch 1 to 0.974 after
+  epoch 60 ([results.csv](docs/training/results.csv)).
+- Exact settings: [args.yaml](docs/training/args.yaml). Model classes,
+  creation dates and file hashes: [model_info.json](docs/training/model_info.json).
+- Ground truth vs the model's predictions on validation shelves:
+  [labels](docs/training/val_batch0_labels.jpg) /
+  [predictions](docs/training/val_batch0_pred.jpg).
+
+![Training curves](docs/training/results.png)
+
 **Caveat.** These numbers are on synthetic shelves drawn with placeholder
 packs, which are easier than real packaging. Add real product photos
 (`data/raw/<SKU>/`, then `prepare_products`), regenerate the datasets,
